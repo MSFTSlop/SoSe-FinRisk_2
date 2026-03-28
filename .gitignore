@@ -1,0 +1,14 @@
+# --- R Workspace & History (EXCLUDE THESE) ---
+.RData
+.Rhistory
+.Rproj.user/
+.Rapp.history
+.RDataTmp
+
+# --- Temporary & System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Keep Data ---
+# We are NOT adding *.csv or *.xlsx here 
+# because you want to keep them for the hand-in.
