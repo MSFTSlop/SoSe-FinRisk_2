@@ -39,7 +39,7 @@ cva_recovery_rate <- 0.60 # Page 6, Question 3b: Recovery rate is 60% [cite: 167
 source("Code_Snippets/formulas.R")
 
 # Source the assignment tasks (comment these out to run individually)
-# source("task1.R")
-# source("task2.R")
-# source("task3.R")
-# source("task4.R")
+source("Code_Snippets/task1.R")
+# source("Code_Snippets/task2.R")
+# source("Code_Snippets/task3.R")
+# source("Code_Snippets/task4.R")
