@@ -3,9 +3,19 @@
 # ==============================================================================
 # Install packages if not already installed
 # install.packages("readxl")
+# install.packages("dplyr")
+# install.packages("lubridate")
+# install.packages("ggplot2")
+# install.packages("tidyr")
+# install.packages("moments")
 
 # Initialize packages
 library(readxl)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(tidyr)
+library(moments)
 
 # --- 1. DATA IMPORT ---
 # Page 2, Section 1A: Provided Files [cite: 43, 44, 45, 46]
