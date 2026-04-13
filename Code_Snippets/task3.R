@@ -8,9 +8,8 @@
 # 1. EXTRACT PARAMETERS (Assuming these are cleanly preset in main.R)
 # ==============================================================================
 # If not explicitly in main.R, ensure these are loaded (Notional = 5m, Spread = 0.018, Rec = 0.6)
-# hedge_notional <- 5000000
-# fixed_spread <- 0.018
-# recovery_rate <- 0.60
+hedge_notional <- 5000000
+fixed_spread <- 0.018
 
 # We need the historical mean and SD to un-standardize the Z-scores 
 # (Calculated from your monthly_factors_base_df)

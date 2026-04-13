@@ -42,7 +42,7 @@ trigger_threshold <- 0.08 # Page 4, Section 1E: 8% cumulative loss on the entire
 
 # Liquidation & Counterparty Parameters
 fire_sale_haircut <- 0.45 # Page 4, Section 1E: Fixed fire-sale haircut is 45% [cite: 103]
-cva_recovery_rate <- 0.60 # Page 6, Question 3b: Recovery rate is 60% [cite: 167]
+recovery_rate <- 0.60 # Page 6, Question 3b: Recovery rate is 60% [cite: 167]
 
 # --- 3. SOURCE FILES ---
 # Source the formulas and calculation engines
@@ -52,4 +52,4 @@ source("Code_Snippets/formulas.R")
 source("Code_Snippets/task1.R")
 source("Code_Snippets/task2.R")
 source("Code_Snippets/task3.R")
-# source("Code_Snippets/task4.R")
+source("Code_Snippets/task4.R")
