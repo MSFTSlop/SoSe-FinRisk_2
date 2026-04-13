@@ -3,15 +3,6 @@
 # Page 6, Question 1: Factor Calibration and Scenario Design (20%)
 # ==============================================================================
 
-# Install required packages if missing
-# install.packages(c("dplyr", "lubridate", "ggplot2", "tidyr", "moments"))
-
-library(dplyr)
-library(lubridate)
-library(ggplot2)
-library(tidyr)
-library(moments)
-
 # ==============================================================================
 # 1. DATA PREPARATION & WINDOWING (Task 1a)
 # ==============================================================================
@@ -35,6 +26,20 @@ merged_data <- merged_data %>%
       year >= 2021 ~ "Window 5: 2021-2026"
     )
   )
+
+# Count datapoints per specific window (just to verify how many datapoints i have)
+##window_audit <- merged_data %>%
+##  group_by(window) %>%
+##  summarise(
+##    datapoints = n(),
+##    start_date = min(date),
+##    end_date = max(date),
+##    completeness_pct = round((n() / 60) * 100, 1) # Assuming 5-year targets
+##  ) %>%
+##  arrange(start_date)
+
+# View the result
+##print(window_audit)
 
 # ==============================================================================
 # 2. KPI CALCULATION & ANALYSIS (Task 1a & 1b)
@@ -95,7 +100,7 @@ density_plot <- ggplot(plot_data, aes(x = Value, fill = window)) +
   theme(legend.position = "bottom")
 
 # Save plot to your working directory
-ggsave("factor_distributions.png", plot = density_plot, width = 10, height = 8)
+ggsave("visualization/factor_distributions.png", plot = density_plot, width = 10, height = 8)
 cat("-> Saved distribution visualization as 'factor_distributions.png'\n")
 
 # ==============================================================================
@@ -212,7 +217,7 @@ df_plot_sim <- rbind(df_bench_sim, df_stress_sim)
 
 # Scatter plot showing joint extremes
 copula_plot <- ggplot(df_plot_sim, aes(x = AI_Shock, y = Oil_Shock, color = Scenario)) +
-  geom_point(alpha = 0.1, size = 0.5) +
+  geom_bin2d(bins = 60) +
   facet_wrap(~Scenario) +
   theme_minimal() +
   labs(title = "Simulated Joint Shocks: Benchmark vs Stress",
@@ -223,7 +228,7 @@ copula_plot <- ggplot(df_plot_sim, aes(x = AI_Shock, y = Oil_Shock, color = Scen
                                 "Stress (t-Copula + Crisis Correlation)" = "red")) +
   theme(legend.position = "none")
 
-ggsave("copula_tail_dependence.png", plot = copula_plot, width = 10, height = 5)
+ggsave("visualization/copula_tail_dependence.png", plot = copula_plot, width = 10, height = 5)
 cat("-> Saved simulation scatter plot as 'copula_tail_dependence.png'\n")
 
 # ==============================================================================
