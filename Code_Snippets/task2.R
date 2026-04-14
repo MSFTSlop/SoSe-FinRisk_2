@@ -61,7 +61,9 @@ run_loss_simulation <- function(z_array, n_sims, horizon_months) {
         # Save exact sector default for Task 2c liquidation valuation
         sector_default_array[i, t, j] <- cum_defaults[j]
         
-        # Sector Loss = Cumulative Defaults * Loss Given Default (1 - Recovery)
+        # Sector Loss = Cumulative Defaults * Loss Given Default (1 - Recovery) 
+        ## basically the lines 67, 68 and 72 are in sum the LPool Loss function
+        ## from the assignment
         sector_loss <- cum_defaults[j] * (1 - base_recoveries[j])
         current_pool_loss <- current_pool_loss + (sector_loss * pool_weights[j])
       }
@@ -88,6 +90,55 @@ loss_res_bench <- run_loss_simulation(z_bench_array, n_sims, horizon_months)
 
 print("Running Stress Simulation...")
 loss_res_stress <- run_loss_simulation(z_stress_array, n_sims, horizon_months)
+
+# ==============================================================================
+# REPORTING TASK 2A: EXPECTED LOSS, VaR, and ES AT MONTH 60
+# ==============================================================================
+print("Reporting Task 2a Results (All 6 Metrics)...")
+
+# Define Confidence Level for VaR/ES (99%)
+alpha <- 0.99
+
+# --- 1. POOL LOSS METRICS (Month 60) ---
+pool_60_bench <- loss_res_bench$pool_loss[, horizon_months]
+pool_60_stress <- loss_res_stress$pool_loss[, horizon_months]
+
+# Benchmark
+el_pool_bench <- mean(pool_60_bench)
+var_pool_bench <- quantile(pool_60_bench, alpha)
+es_pool_bench <- mean(pool_60_bench[pool_60_bench >= var_pool_bench])
+
+# Stress
+el_pool_stress <- mean(pool_60_stress)
+var_pool_stress <- quantile(pool_60_stress, alpha)
+es_pool_stress <- mean(pool_60_stress[pool_60_stress >= var_pool_stress])
+
+# --- 2. SENIOR TRANCHE LOSS METRICS (Month 60) ---
+senior_60_bench <- loss_res_bench$senior_loss[, horizon_months]
+senior_60_stress <- loss_res_stress$senior_loss[, horizon_months]
+
+# Benchmark
+el_senior_bench <- mean(senior_60_bench)
+var_senior_bench <- quantile(senior_60_bench, alpha)
+es_senior_bench <- mean(senior_60_bench[senior_60_bench >= var_senior_bench])
+
+# Stress
+el_senior_stress <- mean(senior_60_stress)
+var_senior_stress <- quantile(senior_60_stress, alpha)
+es_senior_stress <- mean(senior_60_stress[senior_60_stress >= var_senior_stress])
+
+# --- 3. CREATE CLEAN REPORTING DATAFRAME ---
+task2a_results <- data.frame(
+  Metric = c("Expected Loss (EL)", "Value at Risk (VaR 99%)", "Expected Shortfall (ES 99%)"),
+  Pool_Benchmark_Pct = c(el_pool_bench, var_pool_bench, es_pool_bench) * 100,
+  Pool_Stress_Pct = c(el_pool_stress, var_pool_stress, es_pool_stress) * 100,
+  Senior_Benchmark_Pct = c(el_senior_bench, var_senior_bench, es_senior_bench) * 100,
+  Senior_Stress_Pct = c(el_senior_stress, var_senior_stress, es_senior_stress) * 100
+)
+
+# Print out the results table for the report
+print(task2a_results)
+cat("------------------------------------------------------\n")
 
 
 # 3. DISTRESS-FREE VALUATION (Task 2b)
@@ -120,14 +171,13 @@ val_df_stress <- calc_distress_free_value(loss_res_stress$senior_loss)
 cat(sprintf("Distress-Free Value (Benchmark): $%.2f per $100 par\n", val_df_bench))
 cat(sprintf("Distress-Free Value (Stress):    $%.2f per $100 par\n", val_df_stress))
 
-
+# ==============================================================================
 # 4. UNHEDGED BUY-SIDE VALUATION [LIQUIDATION RISK] (Task 2c)
 # ==============================================================================
 print("Starting Task 2c: Unhedged Buy-Side Valuation...")
 
-# Dynamically calculate the proportional spread from the imported historical data 
-# (assuming the spread is located in the 2nd column of the dataframe)
-prop_spread <- mean(historical_bid_ask_base_df[[2]], na.rm = TRUE)
+# Dynamically calculate the proportional spread using the correct decimal column
+avg_bid_ask_spread <- mean(historical_bid_ask_base_df$bid_ask_spread_decimal, na.rm = TRUE)
 
 calc_unhedged_liquidation_value <- function(senior_loss_matrix, sector_default_array) {
   pv_list <- numeric(n_sims)
@@ -166,17 +216,18 @@ calc_unhedged_liquidation_value <- function(senior_loss_matrix, sector_default_a
         pool_val_at_trigger <- pool_val_at_trigger + sector_val
       }
       
-      # Call the exact liquidation formula from formulas.R
+      # MODULARITY FIX: Call the exact liquidation formula from formulas.R
       # Passes the remaining pool value, proportional spread, and fire sale haircut
       proceeds_after_haircut <- calc_liquidation_proceeds(
         rem_value = pool_val_at_trigger, 
-        prop_spread = prop_spread, 
+        prop_spread = avg_bid_ask_spread, 
         fire_sale_haircut = fire_sale_haircut
       )
       
-      # MATHEMATICAL DECISION 2: SENIOR CLAIM WATERFALL SCALING
-      # The Senior Tranche represents only a fraction of the pool's notional (tranche_width),
-      # but it has first rights to 100% of the liquidation cash. 
+      # MATHEMATICAL DECISION: SENIOR CLAIM WATERFALL SCALING
+      # Based on CLO structure in the assignment, the Senior Tranche is only 80% of the pool (tranche_width),
+      # but it has FIRST CLAIM on 100% of the liquidation cash. We scale the proceeds up by dividing by 
+      # the width, capped at the maximum surviving principal they are owed.
       surviving_senior_at_trigger <- 1 - senior_loss_matrix[i, T_trigger]
       senior_claim <- min(surviving_senior_at_trigger, proceeds_after_haircut / tranche_width) 
       
@@ -206,7 +257,6 @@ val_liq_stress <- calc_unhedged_liquidation_value(loss_res_stress$senior_loss, l
 cat(sprintf("Unhedged Value (Benchmark): $%.2f per $100 par (Trigger Prob: %.1f%%)\n", val_liq_bench$Expected_Value, val_liq_bench$Trigger_Prob * 100))
 cat(sprintf("Unhedged Value (Stress):    $%.2f per $100 par (Trigger Prob: %.1f%%)\n", val_liq_stress$Expected_Value, val_liq_stress$Trigger_Prob * 100))
 
-
 # 5. RISK ASSESSMENT DATAFRAME (Task 2d)
 # ==============================================================================
 print("Generating 2D Summary for Risk Assessment (Task 2d)...")
@@ -230,13 +280,7 @@ print("Task 2 Complete. Cleaning up temporary environment variables...")
 
 # Remove temporary pool parameters and extraction vectors
 rm(n_sectors, pool_weights, base_pds, base_recoveries, 
-   beta_ai, beta_oil, beta_rate, wa_coupon, prop_spread, n_sims)
+   beta_ai, beta_oil, beta_rate, wa_coupon, avg_bid_ask_spread)
 
 # Remove the Task 2 specific functions (outputs are safely stored)
-rm(run_loss_simulation, calc_distress_free_value, calc_unhedged_liquidation_value)
-
-# Run garbage collection to immediately free up RAM from the 
-# discarded simulation matrices inside the functions
-gc()
-
-cat("-> Environment cleaned. Ready for Task 3.\n")
+rm(run_loss_simulation, calc_unhedged_liquidation_value)

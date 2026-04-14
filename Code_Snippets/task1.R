@@ -60,6 +60,9 @@ window_kpis <- merged_data %>%
     oil_kurtosis = kurtosis(oil_return) - 3,
     
     # Rate Changes (bps)
+    ## when looking at the optimal model for simulation
+    ## we dont use the bps format but the normal decimal
+    ## version (human vs machine readability)
     rate_mean_bps = mean(rate_change_5y_bps),
     rate_sd_bps = sd(rate_change_5y_bps),
     rate_kurtosis = kurtosis(rate_change_5y_bps) - 3
@@ -122,6 +125,7 @@ cat(sprintf("=> Selected STRESS: %s\n", stress_window_name))
 # ==============================================================================
 # 4. STATISTICAL DIAGNOSTIC FOR DEPENDENCE STRUCTURE
 # ==============================================================================
+## monte carlo simulations need stationary data
 target_vars <- c("software_ai_return", "oil_return", "rate_change_5y")
 fat_tail_votes <- 0
 
@@ -131,7 +135,11 @@ for (var in target_vars) {
   ex_kurt <- kurtosis(ret_data) - 3
   lb_test <- Box.test(ret_data, lag = 1, type = "Ljung-Box")
   
+  ## think we can all agree that perfect normality doesnt exist in
+  ## financial markets. according to AI a rule of thumb is 1.0 as 
+  ## a threshhold
   if (ex_kurt > 1.0) fat_tail_votes <- fat_tail_votes + 1
+  ## ljung box checks for 95% confidence interval autocorrellation 
   if (lb_test$p.value < 0.05) fat_tail_votes <- fat_tail_votes + 1
 }
 

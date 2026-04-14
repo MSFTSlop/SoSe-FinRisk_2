@@ -35,6 +35,10 @@ Instead of using the entire 25-year history of the market, the script chunks the
 ### The Simulation (Copulas & Cholesky)
 Once the windows are selected, the script extracts their specific correlation matrices and simulates 1,000 parallel futures (over 60 months) using Cholesky Decomposition.
 
+We check if the excess curtosis exceeds 1.0 (rule of thumb since perfect normality doesnt exist
+in financial markets) and the p-value is smaller 0.05 (95% confidence) for the ljung-box
+test to check for autocorrellation.
+
 Depending on the excess curtosis you can manually set it up to use either:
 - Linear Gaussian 
 - Garch (1,1)
@@ -43,3 +47,25 @@ Currently its manually set to Garch
 
 ### Visualization
 In the folder "visualization" you can see the factor distributions and copula tail dependence to help in the analysis
+
+## Deep Dive: What happens in task2.R?
+Task 2 we dive into the collateral losses and seniro tranche valuation
+
+### General things to know
+Line 25: given the provided coupons and weights it is standard practice
+to use a WAC-Formula
+
+Line 46: this is the so called Idiosyncratic risk, generated on the fly by R
+for every month and every sector a new independendt standard normal random number
+is being generated
+
+the Z-Arrays: Task 1 we calculated the Z-Scores for AI, Oil and the rates
+these arrays are a massive 3D construct
+1000 Simulations x 60 months x 3 Variables (1=AI; 2=Oil; 3=Rate)
+
+### The Distress Free Investor
+Since the 75 mil tranche is being evaluated as a whole, the pricing 
+logic treats it as a bond (thats why in line 25 the WAC-Formula exists).
+
+At the end we subtract the losses which chewed through the 20% buffer.
+
