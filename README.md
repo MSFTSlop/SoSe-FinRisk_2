@@ -41,9 +41,9 @@ test to check for autocorrellation.
 
 Depending on the excess curtosis you can manually set it up to use either:
 - Linear Gaussian 
-- Garch (1,1)
+- student - t
 
-Currently its manually set to Garch
+Currently its manually set to Student-T
 
 ### Visualization
 In the folder "visualization" you can see the factor distributions and copula tail dependence to help in the analysis
