@@ -139,23 +139,21 @@ for (var in target_vars) {
   ## financial markets. according to AI a rule of thumb is 1.0 as 
   ## a threshhold
   if (ex_kurt > 1.0) fat_tail_votes <- fat_tail_votes + 1
-  ## ljung box checks for 95% confidence interval autocorrellation 
-  if (lb_test$p.value < 0.05) fat_tail_votes <- fat_tail_votes + 1
 }
 
 if (fat_tail_votes >= 2) {
-  cat("-> AI/DIAGNOSTIC CONCLUSION: Excess kurtosis detected. GARCH(1,1) / t-Copula recommended to capture tail risks.\n\n")
+  cat("-> AI/DIAGNOSTIC CONCLUSION: Excess kurtosis detected. Student-t Copula recommended to capture tail risks.\n\n")
 } else {
   cat("-> AI/DIAGNOSTIC CONCLUSION: Uniform data profile. Linear / Gaussian Copula recommended.\n\n")
 }
 
 # ==============================================================================
-# 5. TASK 1c: SIMULATION ENGINE (LINEAR vs GARCH/T-COPULA TOGGLE)
+# 5. TASK 1c: SIMULATION ENGINE (LINEAR vs T-COPULA TOGGLE)
 # ==============================================================================
 print("Task 1c: Simulating 60-month paths...")
 
 # --- USER TOGGLE FOR SIMULATION TYPE ---
-sim_mode <- "GARCH_T_COPULA" # Options: "LINEAR" or "GARCH_T_COPULA"
+sim_mode <- "T_COPULA" # Options: "LINEAR" or "T_COPULA"
 df_t <- 5 # Degrees of freedom for Student-t Copula (lower = fatter tails)
 
 n_sims <- 1000
@@ -182,9 +180,9 @@ for (i in 1:n_sims) {
     z_bench_array[i, , ] <- Z_indep_bench %*% chol_bench
     z_stress_array[i, , ] <- Z_indep_stress %*% chol_stress
     
-  } else if (sim_mode == "GARCH_T_COPULA") {
+  } else if (sim_mode == "T_COPULA") {
     # --------------------------------------------------------------------------
-    # GARCH / STUDENT-T COPULA (Chi-Square Mixture approach)
+    # STUDENT-T COPULA (Chi-Square Mixture approach)
     # --------------------------------------------------------------------------
     # Draw shared Chi-Square variable for joint tail-events (systemic shocks)
     chi_bench <- rchisq(n_months, df = df_t)
